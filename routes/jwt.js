@@ -1,7 +1,6 @@
-// POST /api/jwt
-
-import jwt from "jsonwebtoken";
-
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const router = express.Router();
 router.post("/jwt", (req, res) => {
   const user = req.body;
 
@@ -15,3 +14,5 @@ router.post("/jwt", (req, res) => {
 
   res.send({ token });
 });
+
+module.exports = router;
