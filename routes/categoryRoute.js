@@ -24,6 +24,44 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// POsT create a new catagory
+router.post('/', async (req, res) => {
+  const { categoryName, categoryImage } = req.body;
+
+  if (!categoryName || !categoryImage) {
+    return res.status(400).json({ message: 'Category name and image are required' });
+  }
+
+  try {
+    const existing = await Category.findOne({ categoryName });
+    if (existing) return res.status(400).json({ message: 'Category already exists' });
+
+    const newCategory = new Category({ categoryName, categoryImage });
+    await newCategory.save();
+
+    res.status(201).json(newCategory);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// PUT update a category by Id
+router.put('/:id', async (req, res) => {
+  const { categoryName, categoryImage } = req.body;
+
+  try {
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      { categoryName, categoryImage },
+      { new: true, runValidators: true }
+    );
+    if (!updatedCategory) return res.status(404).json({ message: 'Category not found' });
+
+    res.json(updatedCategory);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 
 module.exports = router;
