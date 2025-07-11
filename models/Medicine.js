@@ -27,7 +27,7 @@ const medicineSchema = new mongoose.Schema({
   },
   unit: {
     type: String,
-    enum: ['Mg', 'ML'],
+    enum: ['MG', 'ML'],
     required: true,
   },
   pricePerUnit: {

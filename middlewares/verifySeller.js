@@ -1,7 +1,18 @@
+const User = require('../models/User'); // or your user model
 
-export const verifySeller = (req, res, next) => {
-  if (!req.user || req.user.role !== 'seller') {
-    return res.status(403).send('Forbidden: Sellers only');
+const verifySeller = async (req, res, next) => {
+  try {
+    const email = req.user?.email;
+    const user = await User.findOne({ email });
+
+    if (user?.role !== 'seller') {
+      return res.status(403).send('Forbidden: Not a seller');
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).send('Internal server error');
   }
-  next();
 };
+
+module.exports = { verifySeller };

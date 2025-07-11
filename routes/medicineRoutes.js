@@ -7,18 +7,44 @@ const { verifyJWT } = require('../middlewares/verifyJWT');
 const { verifyAdmin } = require('../middlewares/verifyAdmin');
 const { verifySeller } = require('../middlewares/verifySeller');
 
-
 // CREATE a new medicine (Seller only)
+// medicineRoutes.js
 router.post('/', verifyJWT, verifySeller, async (req, res) => {
   try {
-    const medicine = new Medicine(req.body);
-    await medicine.save();
-    res.status(201).send({ message: 'Medicine added successfully' });
+    const sellerEmail = req.user.email;
+
+    const {
+      name,
+      genericName,
+      shortDescription,
+      image,
+      category,
+      company,
+      unit,
+      pricePerUnit,
+      discountPercentage,
+    } = req.body;
+
+    const newMedicine = new Medicine({
+      name,
+      genericName,
+      shortDescription,
+      image,
+      category,
+      company,
+      unit,
+      pricePerUnit: parseFloat(pricePerUnit),
+      discountPercentage: parseFloat(discountPercentage || 0),
+      sellerEmail,
+    });
+
+    const result = await newMedicine.save();
+    res.status(201).json(result);
   } catch (error) {
-    res.status(400).send({ error: error.message });
+    console.error("❌ Error adding medicine:", error); // 🔥 Log the full error
+    res.status(500).json({ error: "Failed to add medicine" });
   }
 });
-
 
 // GET all medicines (Public/Shop page)
 router.get('/', async (req, res) => {
@@ -31,17 +57,6 @@ router.get('/', async (req, res) => {
 });
 
 
-// GET medicine by ID (for modal details)
-router.get('/:id', async (req, res) => {
-  try {
-    const medicine = await Medicine.findById(req.params.id);
-    if (!medicine) return res.status(404).send({ error: 'Medicine not found' });
-    res.send(medicine);
-  } catch (error) {
-    res.status(500).send({ error: error.message });
-  }
-});
-
 
 // GET all discounted medicines (Homepage section)
 router.get('/discounts/all', async (req, res) => {
@@ -53,7 +68,6 @@ router.get('/discounts/all', async (req, res) => {
   }
 });
 
-
 // GET advertised medicines (for homepage slider)
 router.get('/advertised/all', async (req, res) => {
   try {
@@ -63,7 +77,6 @@ router.get('/advertised/all', async (req, res) => {
     res.status(500).send({ error: error.message });
   }
 });
-
 
 // GET all medicines of a specific category (Category Details Page)
 router.get('/category/:category', async (req, res) => {
@@ -76,18 +89,23 @@ router.get('/category/:category', async (req, res) => {
   }
 });
 
-
-// GET all medicines of a specific seller
+// GET all medicines of a specific seller (Seller only)
 router.get('/seller/:email', verifyJWT, verifySeller, async (req, res) => {
   try {
-    const email = req.params.email;
-    const medicines = await Medicine.find({ sellerEmail: email });
+    const emailParam = req.params.email.toLowerCase(); // Normalize query param
+
+    console.log("Seller email received:", emailParam);
+
+    const medicines = await Medicine.find({ sellerEmail: emailParam });
+
+    console.log(`Medicines found for ${emailParam}:`, medicines.length);
+
     res.send(medicines);
   } catch (error) {
+    console.error("Error fetching seller medicines:", error);
     res.status(500).send({ error: error.message });
   }
 });
-
 
 // PATCH: Update medicine details (Seller only)
 router.patch('/:id', verifyJWT, verifySeller, async (req, res) => {
@@ -99,7 +117,6 @@ router.patch('/:id', verifyJWT, verifySeller, async (req, res) => {
   }
 });
 
-
 // DELETE: Remove a medicine (Seller only)
 router.delete('/:id', verifyJWT, verifySeller, async (req, res) => {
   try {
@@ -110,7 +127,6 @@ router.delete('/:id', verifyJWT, verifySeller, async (req, res) => {
   }
 });
 
-
 // PATCH: Toggle advertisement status (Admin only)
 router.patch('/:id/toggle-advertise', verifyJWT, verifyAdmin, async (req, res) => {
   try {
@@ -120,6 +136,17 @@ router.patch('/:id/toggle-advertise', verifyJWT, verifyAdmin, async (req, res) =
     medicine.isAdvertised = !medicine.isAdvertised;
     await medicine.save();
     res.send({ message: `Advertisement status updated to ${medicine.isAdvertised}` });
+  } catch (error) {
+    res.status(500).send({ error: error.message });
+  }
+});
+
+// GET medicine by ID (for modal details)
+router.get('/:id', async (req, res) => {
+  try {
+    const medicine = await Medicine.findById(req.params.id);
+    if (!medicine) return res.status(404).send({ error: 'Medicine not found' });
+    res.send(medicine);
   } catch (error) {
     res.status(500).send({ error: error.message });
   }

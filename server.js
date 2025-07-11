@@ -5,7 +5,7 @@ const connectDB = require("./config/db");
 const jwtRoute = require("./routes/jwt");
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require('./routes/categoryRoutes');
-const medicineRoutes = require('./routes/medicines');
+const medicineRoutes = require('./routes/medicineRoutes');
 
 
 connectDB();
@@ -20,7 +20,7 @@ app.use("/api/users", userRoutes);
 app.use("/uploads", express.static("uploads"));
 
 // jwt route
-app.use("/api", jwtRoute); 
+app.use("/api/jwt", jwtRoute); 
 
 // category routes
 app.use('/api/categories', categoryRoutes);
