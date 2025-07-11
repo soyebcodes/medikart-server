@@ -3,7 +3,9 @@ const router = express.Router();
 const Medicine = require('../models/Medicine');
 
 // Middleware for auth
-const verifyJWT = require('../middlewares/verifyJWT');
+const { verifyJWT } = require('../middlewares/verifyJWT');
+const { verifyAdmin } = require('../middlewares/verifyAdmin');
+const { verifySeller } = require('../middlewares/verifySeller');
 
 
 // CREATE a new medicine (Seller only)

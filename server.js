@@ -5,7 +5,7 @@ const connectDB = require("./config/db");
 const jwtRoute = require("./routes/jwt");
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require('./routes/categoryRoutes');
-
+const medicineRoutes = require('./routes/medicines');
 
 
 connectDB();
@@ -24,6 +24,10 @@ app.use("/api", jwtRoute);
 
 // category routes
 app.use('/api/categories', categoryRoutes);
+
+
+// medicine routes
+app.use('/api/medicines', medicineRoutes);
 
 
 app.get("/", (req, res) => {
