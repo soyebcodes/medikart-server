@@ -110,12 +110,18 @@ router.get('/seller/:email', verifyJWT, verifySeller, async (req, res) => {
 // PATCH: Update medicine details (Seller only)
 router.patch('/:id', verifyJWT, verifySeller, async (req, res) => {
   try {
+   
+    
     const updated = await Medicine.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).send({ error: "Medicine not found" });
+
     res.send({ message: 'Medicine updated successfully', updated });
   } catch (error) {
+    console.error("Update medicine error:", error);
     res.status(400).send({ error: error.message });
   }
 });
+
 
 // DELETE: Remove a medicine (Seller only)
 router.delete('/:id', verifyJWT, verifySeller, async (req, res) => {
