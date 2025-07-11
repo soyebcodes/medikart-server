@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Payment = require('../models/Payment');
+const Advertisement = require('../models/Advertisement');
 
 const getSellerRevenue = async (req, res) => {
   try {
@@ -48,4 +49,35 @@ const getSellerPayments = async (req, res) => {
 };
 
 
-module.exports = { getSellerRevenue, getSellerPayments };
+const getSellerAdvertisements = async (req, res) => {
+  const { id: sellerId } = req.params;
+
+  try {
+    const ads = await Advertisement.find({ sellerId }).sort({ createdAt: -1 });
+    res.json(ads);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch advertisements' });
+  }
+};
+
+const createAdvertisement = async (req, res) => {
+  const { id: sellerId } = req.params;
+  const { imageUrl, description } = req.body;
+
+  try {
+    const newAd = new Advertisement({
+      sellerId,
+      imageUrl,
+      description
+    });
+
+    await newAd.save();
+    res.status(201).json(newAd);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create advertisement' });
+  }
+};
+
+
+
+module.exports = { getSellerRevenue, getSellerPayments, getSellerAdvertisements, createAdvertisement };
