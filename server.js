@@ -6,6 +6,7 @@ const jwtRoute = require("./routes/jwt");
 const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require('./routes/categoryRoutes');
 const medicineRoutes = require('./routes/medicineRoutes');
+const sellerRoutes = require('./routes/sellerRoutes');
 
 
 connectDB();
@@ -28,6 +29,9 @@ app.use('/api/categories', categoryRoutes);
 
 // medicine routes
 app.use('/api/medicines', medicineRoutes);
+
+// seller routes
+app.use('/api/seller', sellerRoutes);
 
 
 app.get("/", (req, res) => {

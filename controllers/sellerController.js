@@ -31,4 +31,21 @@ const getSellerRevenue = async (req, res) => {
   }
 };
 
-module.exports = { getSellerRevenue };
+
+
+const getSellerPayments = async (req, res) => {
+  try {
+    const sellerId = req.params.id;
+
+    const payments = await Payment.find({ sellerId })
+      .populate('medicineId', 'itemName')
+      .populate('buyerId', 'name email');
+
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch payments", error: err.message });
+  }
+};
+
+
+module.exports = { getSellerRevenue, getSellerPayments };
