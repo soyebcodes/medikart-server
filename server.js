@@ -7,6 +7,7 @@ const userRoutes = require("./routes/userRoutes");
 const categoryRoutes = require('./routes/categoryRoutes');
 const medicineRoutes = require('./routes/medicineRoutes');
 const sellerRoutes = require('./routes/sellerRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 
 connectDB();
@@ -33,6 +34,8 @@ app.use('/api/medicines', medicineRoutes);
 // seller routes
 app.use('/api/seller', sellerRoutes);
 
+// payment routes
+app.use('/api/payments', paymentRoutes);
 
 app.get("/", (req, res) => {
   res.send("MediKart API is running");
