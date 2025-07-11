@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Category = require("../models/Category");
+const upload = require("../middlewares/multer"); 
+
 
 // GET all categories
 router.get("/", async (req, res) => {
@@ -25,8 +27,9 @@ router.get('/:id', async (req, res) => {
 });
 
 // POsT create a new catagory
-router.post('/', async (req, res) => {
-  const { categoryName, categoryImage } = req.body;
+router.post('/', upload.single('categoryImage'), async (req, res) => {
+  const { categoryName } = req.body;
+  const categoryImage = req.file ? `/uploads/${req.file.filename}` : null;
 
   if (!categoryName || !categoryImage) {
     return res.status(400).json({ message: 'Category name and image are required' });
@@ -46,13 +49,18 @@ router.post('/', async (req, res) => {
 });
 
 // PUT update a category by Id
-router.put('/:id', async (req, res) => {
-  const { categoryName, categoryImage } = req.body;
+router.put('/:id', upload.single('categoryImage'), async (req, res) => {
+  const { categoryName } = req.body;
+  let updateData = { categoryName };
+
+  if (req.file) {
+    updateData.categoryImage = `/uploads/${req.file.filename}`;
+  }
 
   try {
     const updatedCategory = await Category.findByIdAndUpdate(
       req.params.id,
-      { categoryName, categoryImage },
+      updateData,
       { new: true, runValidators: true }
     );
     if (!updatedCategory) return res.status(404).json({ message: 'Category not found' });
@@ -62,6 +70,7 @@ router.put('/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
 
 
 // DELETE a category by ID
