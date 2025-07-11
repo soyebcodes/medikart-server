@@ -1,28 +1,29 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const advertisementSchema = new mongoose.Schema({
-  sellerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  sellerEmail: {
+    type: String,
+    required: true,
   },
   imageUrl: {
     type: String,
-    required: true
+    required: true,
   },
   description: {
     type: String,
-    maxlength: 150
+    required: true,
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected'],
-    default: 'pending'
+    enum: ["pending", "approved", "rejected"],
+    default: "pending",
   },
   createdAt: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-module.exports = mongoose.model('Advertisement', advertisementSchema);
+const Advertisement = mongoose.model("Advertisement", advertisementSchema);
+
+module.exports = Advertisement;

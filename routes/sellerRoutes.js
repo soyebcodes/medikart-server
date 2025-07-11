@@ -1,21 +1,40 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { getSellerRevenue } = require('../controllers/sellerController');
-const { getSellerPayments } = require('../controllers/sellerController');
+const upload = require("../middlewares/upload"); // multer middleware
+const { verifyJWT } = require("../middlewares/verifyJWT");
+const { verifySeller } = require("../middlewares/verifySeller");
 const {
+  getSellerRevenue,
+  getSellerPayments,
   getSellerAdvertisements,
+  createAdvertisement,
+} = require("../controllers/sellerController");
+
+// Revenue
+router.get("/:id/revenue", verifyJWT, verifySeller, getSellerRevenue);
+
+// Payments
+router.get("/:id/payments", verifyJWT, verifySeller, getSellerPayments);
+
+// Get Advertisements
+router.get("/:email/advertisements", verifyJWT, verifySeller, getSellerAdvertisements);
+
+// ✅ Create Advertisement with Cloudinary
+router.post(
+  "/:email/advertisements",
+  verifyJWT,
+  verifySeller,
+  (req, res, next) => {
+    req.uploadFolder = "advertisements"; // 💡 Set folder dynamically
+    next();
+  },
+  (req, res, next) => {
+    upload.single("image")(req, res, function (err) {
+      if (err) return res.status(400).json({ message: err.message });
+      next();
+    });
+  },
   createAdvertisement
-} = require('../controllers/sellerController');
-
-router.get('/:id/revenue', getSellerRevenue);
-
-router.get('email/:email/payments', getSellerPayments);
-
-// Get all ads for a seller
-router.get('/:id/advertisements', getSellerAdvertisements);
-
-// Create a new ad
-router.post('/:id/advertisements', createAdvertisement);
-
+);
 
 module.exports = router;

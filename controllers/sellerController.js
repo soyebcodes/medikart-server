@@ -36,9 +36,9 @@ const getSellerRevenue = async (req, res) => {
 
 const getSellerPayments = async (req, res) => {
   try {
-    const sellerId = req.params.id;
+   const sellerEmail = req.params.email;
 
-    const payments = await Payment.find({ sellerId })
+    const payments = await Payment.find({ sellerEmail })
       .populate('medicineId', 'itemName')
       .populate('buyerId', 'name email');
 
@@ -49,32 +49,38 @@ const getSellerPayments = async (req, res) => {
 };
 
 
-const getSellerAdvertisements = async (req, res) => {
-  const { id: sellerId } = req.params;
+
+
+const createAdvertisement = async (req, res) => {
+  const { description } = req.body;
+  const sellerEmail = req.params.email;
+
+  if (!req.file) {
+    return res.status(400).json({ message: "Image is required" });
+  }
 
   try {
-    const ads = await Advertisement.find({ sellerId }).sort({ createdAt: -1 });
-    res.json(ads);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch advertisements' });
+    const ad = new Advertisement({
+      sellerEmail,
+      imageUrl: req.file.path, // Cloudinary URL from multer
+      description,
+    });
+
+    const saved = await ad.save();
+    res.status(201).json(saved);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to create advertisement", error: error.message });
   }
 };
 
-const createAdvertisement = async (req, res) => {
-  const { id: sellerId } = req.params;
-  const { imageUrl, description } = req.body;
+const getSellerAdvertisements = async (req, res) => {
+  const sellerEmail = req.params.email;
 
   try {
-    const newAd = new Advertisement({
-      sellerId,
-      imageUrl,
-      description
-    });
-
-    await newAd.save();
-    res.status(201).json(newAd);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to create advertisement' });
+    const ads = await Advertisement.find({ sellerEmail }).sort({ createdAt: -1 });
+    res.json(ads);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch advertisements", error: error.message });
   }
 };
 
