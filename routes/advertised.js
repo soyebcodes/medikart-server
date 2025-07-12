@@ -12,7 +12,17 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Toggle isInSlider field
+// Get only advertisements that are approved for slider
+router.get("/slider", async (req, res) => {
+  try {
+    const sliderAds = await Advertisement.find({ isInSlider: true }).sort({ createdAt: -1 });
+    res.json(sliderAds);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch slider advertisements", error: error.message });
+  }
+});
+
+
 // PATCH /api/advertised/:id/toggle-slider
 router.patch("/:id/toggle", async (req, res) => {
   try {

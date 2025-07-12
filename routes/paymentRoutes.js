@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Payment = require("../models/Payment");
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 // GET all payments (optionally filtered by status)
 router.get("/", async (req, res) => {
@@ -47,6 +48,27 @@ router.get("/seller/:email", async (req, res) => {
   }
 });
 
+
+// stripe
+router.post("/create-payment-intent", async (req, res) => {
+  const { amount } = req.body;
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount, // in cents
+      currency: "usd",
+      payment_method_types: ["card"],
+    });
+
+    res.send({
+      clientSecret: paymentIntent.client_secret,
+    });
+  } catch (err) {
+    res.status(500).send({ error: err.message });
+  }
+});
+
+module.exports = router;
 
 // PATCH /api/payments/:id → update payment status to "paid"
 router.patch("/:id", async (req, res) => {

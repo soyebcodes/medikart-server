@@ -40,7 +40,7 @@ router.get("/seller/:email", verifyJWT, verifySeller, async (req, res) => {
 });
 
 // POST new medicine (Seller Only)
-// POST new medicine (Seller Only)
+
 router.post(
   "/",
   verifyJWT,

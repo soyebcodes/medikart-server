@@ -23,6 +23,30 @@ router.get("/", verifyAdmin, async (req, res) => {
   }
 });
 
+// Register new user
+// POST /api/users -> for new user registration
+router.post("/", async (req, res) => {
+  try {
+    const { email, username, role = "user", photo } = req.body;
+
+    if (!email || !username) {
+      return res.status(400).json({ message: "Email and username are required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
+    const newUser = new User({ email, username, role, photo });
+    await newUser.save();
+
+    res.status(201).json({ message: "User registered", user: newUser });
+  } catch (err) {
+    res.status(500).json({ message: "Registration failed", error: err.message });
+  }
+});
+
 
 router.get("/role/:email", async (req, res) => {
   const { email } = req.params;

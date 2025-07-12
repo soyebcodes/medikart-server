@@ -1,7 +1,9 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-router.post("/jwt", (req, res) => {
+
+
+router.post("/", (req, res) => {
   const user = req.body;
 
   if (!user?.email) {
