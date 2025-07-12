@@ -3,12 +3,35 @@ const router = express.Router();
 const multer = require("multer"); // multer imported once at top
 const upload = require("../middlewares/upload"); // your configured multer instance
 const Category = require("../models/Category");
+const Medicine = require("../models/Medicine");
 
-// GET all categories
+// GET all categories with medicine count
 router.get("/", async (req, res) => {
   try {
-    const categories = await Category.find({});
-    res.json(categories);
+    const categories = await Category.find();
+
+    const counts = await Medicine.aggregate([
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Map counts to an object for faster lookup
+    const countMap = {};
+    counts.forEach((c) => {
+      countMap[c._id] = c.count;
+    });
+
+    // Attach medicineCount to each category
+    const categoriesWithCount = categories.map((cat) => ({
+      ...cat._doc,
+      medicineCount: countMap[cat.categoryName] || 0,
+    }));
+
+    res.json(categoriesWithCount);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
