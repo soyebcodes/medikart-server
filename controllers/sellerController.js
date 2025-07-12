@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Payment = require('../models/Payment');
-const Advertisement = require('../models/Advertisement');
+const Advertisement = require('../models/AdvertisedMedicine');
 
 const getSellerRevenue = async (req, res) => {
   try {
