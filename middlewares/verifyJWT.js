@@ -1,16 +1,19 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 export const verifyJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ message: "Unauthorized: No token" });
+  if (!authHeader)
+    return res.status(401).json({ message: "Unauthorized: No token" });
 
   const token = authHeader.split(" ")[1];
-  if (!token) return res.status(401).json({ message: "Unauthorized: No token found" });
+  if (!token)
+    return res.status(401).json({ message: "Unauthorized: No token found" });
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    if (err)
+      return res.status(401).json({ message: "Unauthorized: Invalid token" });
 
-    req.user = decoded; // Attach user info
+    req.user = decoded; // Attach user info for next middleware/routes
     next();
   });
 };

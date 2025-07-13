@@ -16,7 +16,10 @@ connectDB();
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: "https://medikartt.netlify.app", // or "*" for development
+  
+}));
 app.use(express.json());
 
 
@@ -25,7 +28,7 @@ app.use("/api/users", userRoutes);
 app.use("/uploads", express.static("uploads"));
 
 // jwt route
-app.use("/api/jwt", jwtRoute); 
+app.use("/api/auth/jwt", jwtRoute);
 
 // category routes
 app.use('/api/categories', categoryRoutes);

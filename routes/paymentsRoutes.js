@@ -2,6 +2,7 @@ const express = require("express");
 const { body, query, param, validationResult } = require("express-validator");
 const router = express.Router();
 const Payment = require("../models/Payment");
+const { verifyJWT } = require("../middlewares/verifyJWT");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const DEFAULT_CURRENCY = "usd";
@@ -34,17 +35,21 @@ router.get(
   }
 );
 
-/**
- * GET /api/payments/user/:email
- * Get payments by buyer email
- */
+
+
 router.get(
   "/user/:email",
+  verifyJWT, // ✅ Protect the route
   param("email").isEmail(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
+
+    // ✅ Make sure the user is only accessing their own payments
+    if (req.user.email !== req.params.email) {
+      return res.status(403).json({ message: "Forbidden: Access denied" });
+    }
 
     try {
       const payments = await Payment.find({ buyerEmail: req.params.email })
@@ -58,17 +63,20 @@ router.get(
   }
 );
 
-/**
- * GET /api/payments/seller/:email
- * Get payments by seller email
- */
+
 router.get(
   "/seller/:email",
+  verifyJWT, // ✅ add this
   param("email").isEmail(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ errors: errors.array() });
+
+    // Optional: enforce that the decoded user matches the requested email
+    if (req.user.email !== req.params.email) {
+      return res.status(403).json({ message: "Forbidden: Access denied" });
+    }
 
     try {
       const payments = await Payment.find({ sellerEmail: req.params.email })
@@ -81,7 +89,6 @@ router.get(
     }
   }
 );
-
 /**
  * GET /api/payments/pending/all
  * Get all pending payments (admin)
