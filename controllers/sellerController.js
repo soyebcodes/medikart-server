@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const Payment = require('../models/Payment');
-const Advertisement = require('../models/AdvertisedMedicine');
+const mongoose = require("mongoose");
+const Payment = require("../models/Payment");
+const Advertisement = require("../models/AdvertisedMedicine");
 
 const getSellerRevenue = async (req, res) => {
   try {
@@ -11,17 +11,17 @@ const getSellerRevenue = async (req, res) => {
       {
         $group: {
           _id: "$status",
-          total: { $sum: "$amount" }
-        }
-      }
+          total: { $sum: "$amount" },
+        },
+      },
     ]);
 
     const result = {
       paidTotal: 0,
-      pendingTotal: 0
+      pendingTotal: 0,
     };
 
-    revenue.forEach(entry => {
+    revenue.forEach((entry) => {
       if (entry._id === "paid") result.paidTotal = entry.total;
       if (entry._id === "pending") result.pendingTotal = entry.total;
     });
@@ -32,24 +32,21 @@ const getSellerRevenue = async (req, res) => {
   }
 };
 
-
-
 const getSellerPayments = async (req, res) => {
   try {
-   const sellerEmail = req.params.email;
+    const sellerEmail = req.params.email;
 
     const payments = await Payment.find({ sellerEmail })
-      .populate('medicineId', 'itemName')
-      .populate('buyerId', 'name email');
+      .populate("medicineId", "itemName")
+      .populate("buyerId", "name email");
 
     res.json(payments);
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch payments", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Failed to fetch payments", error: err.message });
   }
 };
-
-
-
 
 const createAdvertisement = async (req, res) => {
   const { description } = req.body;
@@ -68,8 +65,19 @@ const createAdvertisement = async (req, res) => {
 
     const saved = await ad.save();
     res.status(201).json(saved);
+    const io = getIO();
+    io.emit("notification", {
+      type: "new_ad",
+      message: `Seller ${sellerEmail} created a new advertisement`,
+      ad: saved,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Failed to create advertisement", error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Failed to create advertisement",
+        error: error.message,
+      });
   }
 };
 
@@ -77,13 +85,23 @@ const getSellerAdvertisements = async (req, res) => {
   const sellerEmail = req.params.email;
 
   try {
-    const ads = await Advertisement.find({ sellerEmail }).sort({ createdAt: -1 });
+    const ads = await Advertisement.find({ sellerEmail }).sort({
+      createdAt: -1,
+    });
     res.json(ads);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch advertisements", error: error.message });
+    res
+      .status(500)
+      .json({
+        message: "Failed to fetch advertisements",
+        error: error.message,
+      });
   }
 };
 
-
-
-module.exports = { getSellerRevenue, getSellerPayments, getSellerAdvertisements, createAdvertisement };
+module.exports = {
+  getSellerRevenue,
+  getSellerPayments,
+  getSellerAdvertisements,
+  createAdvertisement,
+};
