@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
+const { getIO } = require("../utils/socket");
 
 // Middleware example to check admin (you can enhance this)
 const verifyAdmin = (req, res, next) => {
@@ -30,7 +31,9 @@ router.post("/", async (req, res) => {
     const { email, username, role = "user", photo } = req.body;
 
     if (!email || !username) {
-      return res.status(400).json({ message: "Email and username are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and username are required" });
     }
 
     const existingUser = await User.findOne({ email });
@@ -42,11 +45,18 @@ router.post("/", async (req, res) => {
     await newUser.save();
 
     res.status(201).json({ message: "User registered", user: newUser });
+    const io = getIO();
+    io.emit("notification", {
+      type: "new_user",
+      message: `New user registered: ${newUser.username}`,
+      user: { email: newUser.email, username: newUser.username },
+    });
   } catch (err) {
-    res.status(500).json({ message: "Registration failed", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Registration failed", error: err.message });
   }
 });
-
 
 router.get("/role/:email", async (req, res) => {
   const { email } = req.params;
@@ -72,24 +82,24 @@ router.get("/role/:email", async (req, res) => {
   }
 });
 
-
 // PUT /api/users/:email  --> to save or update user
 router.put("/:email", async (req, res) => {
   const { email } = req.params;
   const userData = req.body;
 
   try {
-    const updatedUser = await User.findOneAndUpdate(
-      { email },
-      userData,
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+    const updatedUser = await User.findOneAndUpdate({ email }, userData, {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    });
     res.status(200).json({ message: "User saved/updated", user: updatedUser });
   } catch (error) {
-    res.status(500).json({ message: "Failed to save user", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Failed to save user", error: error.message });
   }
 });
-
 
 // Update user role - Admin only
 router.patch("/role/:email", verifyAdmin, async (req, res) => {
