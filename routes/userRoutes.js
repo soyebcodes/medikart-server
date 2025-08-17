@@ -5,8 +5,6 @@ const { getIO } = require("../utils/socket");
 
 // Middleware example to check admin (you can enhance this)
 const verifyAdmin = (req, res, next) => {
-  // You would get user info from req.user after JWT verification (to implement later)
-  // For now, you can simulate by sending admin header or skip for now
   if (req.headers["x-admin"] === "true") {
     next();
   } else {
@@ -17,7 +15,7 @@ const verifyAdmin = (req, res, next) => {
 // Get all users - Admin only
 router.get("/", verifyAdmin, async (req, res) => {
   try {
-    const users = await User.find({}, "-password"); // Exclude sensitive info if any
+    const users = await User.find({}, "-password"); // Exclude sensitive info
     res.json(users);
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
@@ -25,7 +23,6 @@ router.get("/", verifyAdmin, async (req, res) => {
 });
 
 // Register new user
-// POST /api/users -> for new user registration
 router.post("/", async (req, res) => {
   try {
     const { email, username, role = "user", photo } = req.body;
@@ -45,11 +42,14 @@ router.post("/", async (req, res) => {
     await newUser.save();
 
     res.status(201).json({ message: "User registered", user: newUser });
+
+    // Emit notification for registration
     const io = getIO();
     io.emit("notification", {
       type: "new_user",
       message: `New user registered: ${newUser.username}`,
       user: { email: newUser.email, username: newUser.username },
+      timestamp: Date.now(),
     });
   } catch (err) {
     res
@@ -58,12 +58,36 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.get("/role/:email", async (req, res) => {
-  const { email } = req.params;
-
+// Login route with notification
+router.post("/login", async (req, res) => {
   try {
+    const { email } = req.body;
     const user = await User.findOne({ email });
 
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Here you can add JWT/session logic if needed
+
+    res.status(200).json({ message: "Login successful", user });
+
+    // Emit notification for login
+    const io = getIO();
+    io.emit("notification", {
+      type: "user_login",
+      message: `User ${user.username} has logged in`,
+      user: { email: user.email, username: user.username },
+      timestamp: Date.now(),
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Login failed", error: err.message });
+  }
+});
+
+// Get user role
+router.get("/role/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const user = await User.findOne({ email });
     if (user) {
       res.send({
         role: user.role,
@@ -82,11 +106,10 @@ router.get("/role/:email", async (req, res) => {
   }
 });
 
-// PUT /api/users/:email  --> to save or update user
+// Save or update user
 router.put("/:email", async (req, res) => {
   const { email } = req.params;
   const userData = req.body;
-
   try {
     const updatedUser = await User.findOneAndUpdate({ email }, userData, {
       upsert: true,
