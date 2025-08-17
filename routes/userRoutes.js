@@ -3,7 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const { getIO } = require("../utils/socket");
 
-// Middleware example to check admin (you can enhance this)
+// Middleware example to check admin
 const verifyAdmin = (req, res, next) => {
   if (req.headers["x-admin"] === "true") {
     next();
